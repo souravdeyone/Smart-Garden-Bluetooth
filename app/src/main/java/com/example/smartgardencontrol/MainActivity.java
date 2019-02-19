@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private BluetoothAdapter myBluetooth = null;
     private Set<BluetoothDevice> pairedDevices;
-    private static String EXTRA_ADDRESS = "device address";
+    //private static String EXTRA_ADDRESS = "device address";
 
 
     @Override
@@ -87,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
                 String info = ((TextView) v).getText().toString();
                 String address = info.substring(info.length()-17);
                 Intent i = new Intent(MainActivity.this, gardenControl.class);
-                i.putExtra(EXTRA_ADDRESS,  address);
+                i.putExtra("ADDRESS",  address);
                 startActivity(i);
 
             }
