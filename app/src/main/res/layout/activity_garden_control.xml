@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -20,35 +19,32 @@
 
     <Button
         android:id="@+id/on_btn"
-        android:layout_width="170dp"
+        android:text="ON"
+        android:layout_width="100dp"
         android:layout_height="60dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="195dp"
-        android:fadingEdge="none"
-        android:textColor="#212121"
         android:textSize="30sp"
-        tools:text="ON"/>
+        android:fontFamily="sans-serif-smallcaps"
+
+        android:textColor="#FFFFFF"
+        android:background="@color/colorPrimary"
+        />
 
     <Button
         android:layout_width="170dp"
+        android:text="OFF"
         android:layout_height="60dp"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="300dp"
-        android:textColor="#212121"
-        android:fadingEdge="none"
         android:id="@+id/off_btn"
-        android:textSize="30sp"
-        tools:text="OFF" />
-
-    <Button
-        android:layout_width="150dp"
-        android:layout_height="40dp"
-        android:layout_marginTop="500dp"
         android:fontFamily="sans-serif-smallcaps"
-        android:fadingEdge="none"
-        android:id="@+id/dis_btn"
-        android:textSize="20sp"
-        tools:text="DISCONNECT"/>
+
+        android:textSize="30sp"
+        android:background="@color/colorPrimary"
+        android:textColor="#FFFFFF"
+        />
+
 
 </RelativeLayout>

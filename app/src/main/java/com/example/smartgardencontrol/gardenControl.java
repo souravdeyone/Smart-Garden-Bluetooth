@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -22,7 +23,7 @@ import java.util.UUID;
 
 public class gardenControl extends AppCompatActivity {
 
-    Button on, off, discnt, abt;
+    Button on, off;
     TextView txtString;
     String address = null;
     BluetoothAdapter myBluetooth;
@@ -34,6 +35,8 @@ public class gardenControl extends AppCompatActivity {
     private StringBuilder recDataString = new StringBuilder();
     private AsyncTask mConnectBT;
     private ConnectedThread mConnectedThread;
+    private BluetoothAdapter btAdapter = null;
+
 
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
@@ -45,11 +48,8 @@ public class gardenControl extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_garden_control);
 
-        Intent newInt = getIntent();
-        address = ((Intent) newInt).getStringExtra("ADDRESS");
         on = (Button)findViewById(R.id.on_btn);
         off = (Button)findViewById(R.id.off_btn);
-        discnt = (Button)findViewById(R.id.dis_btn);
         txtString = (TextView)findViewById(R.id.textView2);
 
 
@@ -69,9 +69,9 @@ public class gardenControl extends AppCompatActivity {
 
         };
 
-        mConnectBT = new ConnectBT().execute();
-        mConnectedThread = new ConnectedThread(btSocket);
-        mConnectedThread.start();
+
+        btAdapter = BluetoothAdapter.getDefaultAdapter();
+        checkBTState();
 
         on.setOnClickListener(new View.OnClickListener(){
             @Override
@@ -85,25 +85,21 @@ public class gardenControl extends AppCompatActivity {
                 turnOffPump();
             }
         });
-        discnt.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                //disconnect();
-            }
-        });
+
     }
 
 
     private void turnOffPump(){
-        mConnectedThread.write("0");
+        mConnectedThread.write("abc");
         Toast.makeText(getApplicationContext(), "Pump Turned Off", Toast.LENGTH_LONG).show();
     }
 
 
     private void turnOnPump(){
-        mConnectedThread.write("1");
+        mConnectedThread.write("def");
         Toast.makeText(getApplicationContext(), "Pump Turned On", Toast.LENGTH_LONG).show();
     }
+
     private void updateDisplay(){
         if (btSocket != null){
             try{
@@ -117,48 +113,68 @@ public class gardenControl extends AppCompatActivity {
     }
 
 
-    private class ConnectBT extends AsyncTask<Void, Void, Void> {
+    private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
 
-        private boolean ConnectSuccess = true;
+        return  device.createRfcommSocketToServiceRecord(myUUID);
+        //creates secure outgoing connecetion with BT device using UUID
+    }
 
-        @Override
-        protected void onPreExecute(){
-            progress = ProgressDialog.show(getApplicationContext(), "Connecting...", "Please wait");
+    @Override
+    public void onResume(){
+        super.onResume();
+        Intent newInt = getIntent();
+        address = ((Intent) newInt).getStringExtra("ADDRESS");
+        BluetoothDevice device = btAdapter.getRemoteDevice(address);
 
+        try {
+            btSocket = createBluetoothSocket(device);
+        } catch (IOException e) {
+            Toast.makeText(getBaseContext(), "Socket creation failed", Toast.LENGTH_LONG).show();
         }
-
-        @Override
-        protected Void doInBackground(Void... devices) {
-
-            try{
-                if (btSocket==null || !isConnected){
-                    myBluetooth = BluetoothAdapter.getDefaultAdapter();
-                    BluetoothDevice dispositivo = myBluetooth.getRemoteDevice(address);
-                    btSocket = dispositivo.createInsecureRfcommSocketToServiceRecord(myUUID);
-                    BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-                    btSocket.connect();
-                }
+        // Establish the Bluetooth socket connection.
+        try
+        {
+            btSocket.connect();
+        } catch (IOException e) {
+            try
+            {
+                btSocket.close();
+            } catch (IOException e2)
+            {
+                //insert code to deal with this
             }
-            catch(IOException e){
-                ConnectSuccess = false;
-            }
-
-            return null;
-
         }
+        mConnectedThread = new ConnectedThread(btSocket);
+        mConnectedThread.start();
 
-        @Override
-        protected void onPostExecute(Void result){
-            super.onPostExecute(result);
-            if (!ConnectSuccess){
-                Toast.makeText(getApplicationContext(), "Connection Failed", Toast.LENGTH_LONG).show();
-                finish();
+        //I send a character when resuming.beginning transmission to check device is connected
+        //If it is not an exception will be thrown in the write method and finish() will be called
+        mConnectedThread.write("x");
+
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        try
+        {
+            //Don't leave Bluetooth sockets open when leaving activity
+            btSocket.close();
+        } catch (IOException e2) {
+            //insert code to deal with this
+        }
+    }
+
+    private void checkBTState() {
+
+        if(btAdapter==null) {
+            Toast.makeText(getBaseContext(), "Device does not support bluetooth", Toast.LENGTH_LONG).show();
+        } else {
+            if (btAdapter.isEnabled()) {
+            } else {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, 1);
             }
-            else{
-                Toast.makeText(getApplicationContext(), "Connected", Toast.LENGTH_LONG).show();
-                isConnected = true;
-            }
-            progress.dismiss();
         }
     }
 
@@ -179,6 +195,8 @@ public class gardenControl extends AppCompatActivity {
             }
             catch (IOException e){
 
+                Log.e("Error in ConnectedThd", "Related to getInputStream()");
+
             }
             mmInStream = tmpIn;
             mmOutStream = tmpOut;
@@ -187,7 +205,7 @@ public class gardenControl extends AppCompatActivity {
         public void run(){
             byte[] buffer = new byte[256];
             int bytes;
-            //Looping to keep searhing for new messages from the garden!
+            //Looping to keep searching for new messages from the garden!
             while (true) {
                 try {
                     bytes = mmInStream.read(buffer);
@@ -209,6 +227,5 @@ public class gardenControl extends AppCompatActivity {
                 finish();
             }
         }
-
     }
 }
