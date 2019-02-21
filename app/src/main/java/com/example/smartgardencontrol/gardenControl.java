@@ -63,6 +63,8 @@ public class gardenControl extends AppCompatActivity {
                     if (endOfLineIndex >0){
                         String dataInPrint = recDataString.substring(0, endOfLineIndex);
                         txtString.setText("Data Received =  "+ dataInPrint);
+                        Log.e("Incoming MSG",dataInPrint);
+
                     }
                 }
             }
@@ -90,13 +92,13 @@ public class gardenControl extends AppCompatActivity {
 
 
     private void turnOffPump(){
-        mConnectedThread.write("abc");
+        mConnectedThread.write("0");
         Toast.makeText(getApplicationContext(), "Pump Turned Off", Toast.LENGTH_LONG).show();
     }
 
 
     private void turnOnPump(){
-        mConnectedThread.write("def");
+        mConnectedThread.write("1");
         Toast.makeText(getApplicationContext(), "Pump Turned On", Toast.LENGTH_LONG).show();
     }
 
